@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "NewTurn Logistics",
-    "slug": "newturnlogistics-mobile",
+    "slug": "balraj26",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -11,7 +11,9 @@
       "icon": "./assets/expo.icon",
       "bundleIdentifier": "com.newturnlogistics.mobile",
       "infoPlist": {
-        "UIBackgroundModes": ["location"],
+        "UIBackgroundModes": [
+          "location"
+        ],
         "NSLocationWhenInUseUsageDescription": "NewTurn Logistics uses your location to share live tracking on shipments you're driving.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "NewTurn Logistics tracks your location in the background while a shipment is active, so factories and transporters can see live progress.",
         "NSCameraUsageDescription": "NewTurn Logistics uses your camera to capture proof-of-delivery and gate-check photos."
@@ -27,12 +29,13 @@
       "predictiveBackGestureEnabled": false,
       "package": "com.newturnlogistics.mobile",
       "permissions": [
-        "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION",
-        "ACCESS_BACKGROUND_LOCATION",
-        "FOREGROUND_SERVICE",
-        "FOREGROUND_SERVICE_LOCATION",
-        "CAMERA"
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_BACKGROUND_LOCATION",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_LOCATION",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "web": {
@@ -68,6 +71,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "e4110f0a-d7f9-4b86-90eb-7f1a609735d2"
+      }
+    },
+    "owner": "balraj26s-team"
   }
 }
