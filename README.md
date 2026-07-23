@@ -60,19 +60,52 @@ camera.
 
 ## Building & submitting (EAS)
 
-Not run yet — needs `eas login` (an Expo account) first:
+Logged in and linked (2026-07-23) — the commands below use the CLI
+package name directly since plain `npx eas ...` fails with "could not
+determine executable to run" (the package is `eas-cli`, not `eas`):
 
 ```bash
-npx eas login
-npx eas build:configure        # links this project to an EAS project, fills app.json's `extra.eas.projectId`
-npx eas build --profile preview --platform android   # internal APK, fastest way to test on a real device
-npx eas build --profile production --platform all
-npx eas submit --platform ios      # after a production build
-npx eas submit --platform android
+npx eas-cli@latest login                 # done — account: balrajsingh1910@gmail.com
+npx eas-cli@latest init --id <id>        # done — see app.json's extra.eas.projectId
+npx eas-cli@latest build --profile preview --platform android   # first build kicked off, see below
+npx eas-cli@latest build --profile production --platform all
+npx eas-cli@latest submit --platform ios      # after a production build
+npx eas-cli@latest submit --platform android
 ```
 
-`eas.json` already defines `development`/`preview`/`production` profiles
-pointing at `https://api.newturnlogistics.com`. `app.json` sets
+**Project**: linked to `@balraj26s-team/balraj26` (EAS project ID
+`e4110f0a-d7f9-4b86-90eb-7f1a609735d2`). The project's *slug* ended up as
+`balraj26` (defaulted from the account name — it was created via the EAS
+dashboard's "New project" flow without a custom name) instead of
+`newturnlogistics-mobile`; cosmetic only, shows up in the expo.dev project
+URL. Rename it on the dashboard if you want it cleaner — `app.json`'s
+`slug` field has to match whatever the project is actually registered
+under, so don't hand-edit it without also renaming the EAS project first.
+
+**Credentials**: Android signing keystore was generated and is held by
+EAS ("remote credentials" — you don't need `keytool` installed locally).
+
+**EAS Update**: the first build auto-installed `expo-updates` and wired
+`runtimeVersion`/`updates.url` for the `preview` channel/branch it
+created — OTA JS-only updates (`eas update --branch preview`) work once a
+build from that channel is installed, without needing a new store build
+for every change.
+
+**Checking a build's status**:
+
+```bash
+npx eas-cli@latest build:list                 # recent builds, all profiles
+npx eas-cli@latest build:view <build-id>       # one build's detail + logs/artifact URL
+```
+
+Status also shows on the EAS dashboard (expo.dev → your project →
+Builds) — same info, plus a permanent install QR code once it finishes.
+Builds can sit "in queue" for a while on the free tier; it's running
+entirely in EAS's cloud, so closing the terminal or losing the local
+connection doesn't cancel it.
+
+`eas.json` defines `development`/`preview`/`production` profiles pointing
+at `https://api.newturnlogistics.com`. `app.json` sets
 `ios.bundleIdentifier`/`android.package` to `com.newturnlogistics.mobile`
-and the permission strings EAS needs for the App Store/Play Store
-review (location, camera, background location).
+and the permission strings EAS needs for App Store/Play Store review
+(location, camera, background location).
