@@ -78,6 +78,12 @@
         "projectId": "e4110f0a-d7f9-4b86-90eb-7f1a609735d2"
       }
     },
-    "owner": "balraj26s-team"
+    "owner": "balraj26s-team",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/e4110f0a-d7f9-4b86-90eb-7f1a609735d2"
+    }
   }
 }
