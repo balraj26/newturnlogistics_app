@@ -62,7 +62,7 @@ export default function LoginScreen() {
     <Screen scroll={false}>
       <KeyboardAvoidingView behavior={Platform.select({ ios: 'padding', default: undefined })} style={styles.flex}>
         <View style={styles.content}>
-          <Image source={require('@/assets/brand/logo.png')} style={styles.logo} resizeMode="contain" />
+          <Image source={require('../../assets/brand/logo.png')} style={styles.logo} resizeMode="contain" />
           <Text variant="h1" style={styles.center}>
             Log in
           </Text>

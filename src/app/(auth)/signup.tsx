@@ -60,7 +60,7 @@ export default function SignupScreen() {
   return (
     <Screen>
       <KeyboardAvoidingView behavior={Platform.select({ ios: 'padding', default: undefined })} style={styles.flex}>
-        <Image source={require('@/assets/brand/logo.png')} style={styles.logo} resizeMode="contain" />
+        <Image source={require('../../assets/brand/logo.png')} style={styles.logo} resizeMode="contain" />
         <Text variant="h1" style={styles.center}>
           Create your company account
         </Text>
