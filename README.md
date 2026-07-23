@@ -1,56 +1,78 @@
-# Welcome to your Expo app 👋
+# NewTurn Logistics — mobile app
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+React Native (Expo, TypeScript, Expo Router) companion app to
+[`New Turn/backend`](../New%20Turn/backend) and
+[`New Turn/frontend`](../New%20Turn/frontend) — one app, four persona tab
+groups resolved by role after login (see `src/hooks/useCurrentRole.ts`):
+Factory Owner, Transporter, Driver, Gatekeeper.
 
-## Get started
-
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Setup
 
 ```bash
-npm run reset-project
+npm install
+cp .env.example .env   # point EXPO_PUBLIC_API_URL at your backend
+npx expo start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+`EXPO_PUBLIC_API_URL` must be reachable from wherever the app runs — use
+your machine's LAN IP (not `localhost`) for a physical device or the
+Android emulator; `http://localhost:8000` only works from the iOS
+Simulator on the same machine as the backend.
 
-### Other setup steps
+Location and push-notification permissions require a real device or the
+iOS Simulator/Android emulator with Google Play services — camera capture
+(proof of delivery) needs a real device or a simulator with a mocked
+camera.
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+## Structure
 
-## Learn more
+- `src/theme/` — design tokens ported from `NewTurn Mobile App Template`
+  (color/typography/spacing values) + the `useTheme()` light/dark hook.
+- `src/components/ui/` — core primitives (Button, Input, Card, StatusPill,
+  Screen, TopAppBar, ...).
+- `src/services/`, `src/types/api.ts`, `src/lib/api-client.ts` — ported
+  from `New Turn/frontend` (same backend, same contracts); the auth store
+  (`src/store/auth-store.ts`) swaps `localStorage` for `expo-secure-store`.
+- `src/app/(auth)/` — login, signup, OTP email verification.
+- `src/app/(app)/` — authenticated shell; `(app)/index.tsx` resolves role
+  and redirects into `factory/`, `transporter/`, `driver/`, or
+  `gatekeeper/`, each with its own `Tabs` layout.
 
-To learn more about developing your project with Expo, look at the following resources:
+## Known gaps / next steps (deliberately out of scope for v1)
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+- **Native Google Sign-In**: the backend's `/auth/google/*` flow hands
+  tokens back via a web redirect fragment, not usable from a native
+  binary. Email+password + OTP is the only mobile signup path for now.
+- **True background location**: `useShipmentLocationSharing` only tracks
+  while the app is foregrounded (`Location.watchPositionAsync`). Real
+  background tracking needs `Location.startLocationUpdatesAsync` +
+  `expo-task-manager`, which requires a custom dev-client/production
+  build — it does not run in Expo Go on iOS since SDK 43.
+- **Team/roles, finance, and most master-data CRUD** (locations, materials,
+  routes, business partners) are web-dashboard-only for now — the mobile
+  app assumes those are set up there first; it covers the workflows that
+  actually need to happen in the field (shipment lifecycle, bidding,
+  gate check-in/out, proof of delivery).
+- **Offline ping queue** (`src/lib/ping-queue.ts`) persists failed
+  tracking pings and flushes on reconnect, but there's no equivalent queue
+  for other mutations (bids, status transitions) — those still fail
+  outright when offline.
 
-## Join the community
+## Building & submitting (EAS)
 
-Join our community of developers creating universal apps.
+Not run yet — needs `eas login` (an Expo account) first:
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```bash
+npx eas login
+npx eas build:configure        # links this project to an EAS project, fills app.json's `extra.eas.projectId`
+npx eas build --profile preview --platform android   # internal APK, fastest way to test on a real device
+npx eas build --profile production --platform all
+npx eas submit --platform ios      # after a production build
+npx eas submit --platform android
+```
+
+`eas.json` already defines `development`/`preview`/`production` profiles
+pointing at `https://api.newturnlogistics.com`. `app.json` sets
+`ios.bundleIdentifier`/`android.package` to `com.newturnlogistics.mobile`
+and the permission strings EAS needs for the App Store/Play Store
+review (location, camera, background location).

@@ -8,6 +8,11 @@ export function useColorScheme() {
   const [hasHydrated, setHasHydrated] = useState(false);
 
   useEffect(() => {
+    // Intentional: this is the standard React hydration-mismatch fix for
+    // static web rendering (server always renders 'light', then swaps to
+    // the real scheme once mounted) — not the "derive state during render"
+    // anti-pattern the lint rule otherwise guards against.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setHasHydrated(true);
   }, []);
 

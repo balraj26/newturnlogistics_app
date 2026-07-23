@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "newturnlogistics-mobile",
+    "name": "NewTurn Logistics",
     "slug": "newturnlogistics-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -8,7 +8,14 @@
     "scheme": "newturnlogisticsmobile",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "bundleIdentifier": "com.newturnlogistics.mobile",
+      "infoPlist": {
+        "UIBackgroundModes": ["location"],
+        "NSLocationWhenInUseUsageDescription": "NewTurn Logistics uses your location to share live tracking on shipments you're driving.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "NewTurn Logistics tracks your location in the background while a shipment is active, so factories and transporters can see live progress.",
+        "NSCameraUsageDescription": "NewTurn Logistics uses your camera to capture proof-of-delivery and gate-check photos."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -17,7 +24,16 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.newturnlogistics.mobile",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION",
+        "CAMERA"
+      ]
     },
     "web": {
       "output": "static",
@@ -28,11 +44,26 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#132058",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
-      ]
+      ],
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "NewTurn Logistics tracks your location in the background while a shipment is active, so factories and transporters can see live progress.",
+          "isAndroidBackgroundLocationEnabled": true
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "NewTurn Logistics uses your camera to capture proof-of-delivery and gate-check photos."
+        }
+      ],
+      "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": true,
