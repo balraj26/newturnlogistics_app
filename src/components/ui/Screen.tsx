@@ -42,5 +42,5 @@ export function Screen({ children, scroll = true, padded = true, onRefresh, refr
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   scrollContent: { flexGrow: 1 },
-  padded: { padding: spacing.md, gap: spacing.md },
+  padded: { flex: 1, padding: spacing.md, gap: spacing.md },
 });

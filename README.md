@@ -58,6 +58,40 @@ camera.
   for other mutations (bids, status transitions) — those still fail
   outright when offline.
 
+## Running natively on Android (local build, no EAS wait)
+
+For fast local iteration instead of waiting on EAS cloud builds:
+
+```bash
+# ~/.zshrc (Android Studio's bundled JBR, Java 21)
+export ANDROID_HOME=$HOME/Library/Android/sdk
+export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
+
+npx expo run:android   # builds the native project + installs on a running emulator/device
+```
+
+Requires Android Studio installed with an AVD created (Android Studio →
+Device Manager). `brew install watchman` is recommended — without it,
+Metro's fallback file watcher can serve stale bundles after edits (looks
+like the file wasn't saved, or a fixed error keeps reappearing).
+
+**SDK version**: on Expo SDK 54 (`react-native` 0.81.5, React 19.1) as of
+2026-07-24, downgraded from SDK 57 while chasing the layout bug below.
+The downgrade turned out not to be the fix (see below), but there's no
+reason to move back — 54 is stable, `expo-doctor` is 18/18 clean, and
+nothing in this app needs an SDK-57-only feature.
+
+**Known Android layout footgun**: `components/ui/Screen.tsx`'s `padded`
+wrapper needs `flex: 1` (fixed 2026-07-24). Without it, a `Screen
+scroll={false}` + a `flex:1`-centered content view inside is an ambiguous
+nested-flex case that Android's Yoga layout engine resolves badly —
+auto-sized `Text` nodes (titles, subtitles, input labels) get measured
+with zero space and silently disappear, while fixed-height elements
+(buttons, `TextInput` boxes) still render, overlapping. Same component
+tree rendered correctly on `expo start --web`, which is more forgiving of
+that ambiguity — don't trust a clean web render alone when a screen uses
+`scroll={false}` with centered content; check Android/iOS too.
+
 ## Building & submitting (EAS)
 
 Logged in and linked (2026-07-23) — the commands below use the CLI
