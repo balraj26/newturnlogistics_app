@@ -82,7 +82,7 @@ export default function VerifyEmailScreen() {
                 keyboardType="number-pad"
                 maxLength={6}
                 autoComplete="one-time-code"
-                value={field.value}
+                value={field.value ?? ''}
                 onChangeText={field.onChange}
                 error={errors.code?.message}
               />

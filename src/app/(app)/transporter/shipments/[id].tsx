@@ -122,20 +122,20 @@ export default function TransporterShipmentDetailScreen() {
                   control={control}
                   name="price"
                   render={({ field }) => (
-                    <Input label="Price (₹)" keyboardType="numeric" onChangeText={field.onChange} error={errors.price?.message} />
+                    <Input label="Price (₹)" keyboardType="numeric" value={String(field.value ?? '')} onChangeText={field.onChange} error={errors.price?.message} />
                   )}
                 />
                 <Controller
                   control={control}
                   name="eta_hours"
                   render={({ field }) => (
-                    <Input label="ETA (hours)" keyboardType="numeric" onChangeText={field.onChange} error={errors.eta_hours?.message} />
+                    <Input label="ETA (hours)" keyboardType="numeric" value={String(field.value ?? '')} onChangeText={field.onChange} error={errors.eta_hours?.message} />
                   )}
                 />
                 <Controller
                   control={control}
                   name="notes"
-                  render={({ field }) => <Input label="Notes (optional)" onChangeText={field.onChange} />}
+                  render={({ field }) => <Input label="Notes (optional)" value={field.value ?? ''} onChangeText={field.onChange} />}
                 />
                 <Button
                   label={submitBid.isPending ? 'Submitting...' : 'Submit bid'}

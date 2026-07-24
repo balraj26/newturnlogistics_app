@@ -140,20 +140,20 @@ export default function NewShipmentScreen() {
             control={control}
             name="weight_kg"
             render={({ field }) => (
-              <Input label="Weight (kg)" keyboardType="numeric" onChangeText={field.onChange} error={errors.weight_kg?.message} />
+              <Input label="Weight (kg)" keyboardType="numeric" value={String(field.value ?? '')} onChangeText={field.onChange} error={errors.weight_kg?.message} />
             )}
           />
           <Controller
             control={control}
             name="required_date"
             render={({ field }) => (
-              <Input label="Required date (YYYY-MM-DD)" onChangeText={field.onChange} error={errors.required_date?.message} />
+              <Input label="Required date (YYYY-MM-DD)" value={field.value ?? ''} onChangeText={field.onChange} error={errors.required_date?.message} />
             )}
           />
           <Controller
             control={control}
             name="special_instructions"
-            render={({ field }) => <Input label="Special instructions (optional)" onChangeText={field.onChange} />}
+            render={({ field }) => <Input label="Special instructions (optional)" value={field.value ?? ''} onChangeText={field.onChange} />}
           />
         </Card>
 

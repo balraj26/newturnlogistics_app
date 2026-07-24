@@ -40,13 +40,13 @@ function AddVehicleForm({ onDone }: { onDone: () => void }) {
   return (
     <Card>
       <Controller control={control} name="registration_number" render={({ field }) => (
-        <Input label="Registration number" onChangeText={field.onChange} error={errors.registration_number?.message} />
+        <Input label="Registration number" value={field.value ?? ''} onChangeText={field.onChange} error={errors.registration_number?.message} />
       )} />
       <Controller control={control} name="vehicle_type" render={({ field }) => (
-        <Input label="Vehicle type" onChangeText={field.onChange} error={errors.vehicle_type?.message} />
+        <Input label="Vehicle type" value={field.value ?? ''} onChangeText={field.onChange} error={errors.vehicle_type?.message} />
       )} />
       <Controller control={control} name="capacity_kg" render={({ field }) => (
-        <Input label="Capacity (kg)" keyboardType="numeric" onChangeText={field.onChange} error={errors.capacity_kg?.message} />
+        <Input label="Capacity (kg)" keyboardType="numeric" value={String(field.value ?? '')} onChangeText={field.onChange} error={errors.capacity_kg?.message} />
       )} />
       <Button label={mutation.isPending ? 'Adding...' : 'Add vehicle'} onPress={handleSubmit((v) => mutation.mutate(v))} loading={mutation.isPending} />
     </Card>
@@ -68,16 +68,16 @@ function AddDriverForm({ onDone }: { onDone: () => void }) {
   return (
     <Card>
       <Controller control={control} name="full_name" render={({ field }) => (
-        <Input label="Full name" onChangeText={field.onChange} error={errors.full_name?.message} />
+        <Input label="Full name" value={field.value ?? ''} onChangeText={field.onChange} error={errors.full_name?.message} />
       )} />
       <Controller control={control} name="license_number" render={({ field }) => (
-        <Input label="License number" onChangeText={field.onChange} error={errors.license_number?.message} />
+        <Input label="License number" value={field.value ?? ''} onChangeText={field.onChange} error={errors.license_number?.message} />
       )} />
       <Controller control={control} name="phone" render={({ field }) => (
-        <Input label="Phone" keyboardType="phone-pad" onChangeText={field.onChange} error={errors.phone?.message} />
+        <Input label="Phone" keyboardType="phone-pad" value={field.value ?? ''} onChangeText={field.onChange} error={errors.phone?.message} />
       )} />
       <Controller control={control} name="password" render={({ field }) => (
-        <Input label="Temporary password" secureTextEntry onChangeText={field.onChange} error={errors.password?.message} />
+        <Input label="Temporary password" secureTextEntry value={field.value ?? ''} onChangeText={field.onChange} error={errors.password?.message} />
       )} />
       <Text variant="caption" color="textSecondary">
         The driver logs into this same app with their phone/email and this password.

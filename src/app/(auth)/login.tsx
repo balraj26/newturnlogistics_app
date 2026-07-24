@@ -79,7 +79,7 @@ export default function LoginScreen() {
                   label="Phone or email"
                   autoCapitalize="none"
                   autoComplete="username"
-                  value={field.value}
+                  value={field.value ?? ''}
                   onChangeText={field.onChange}
                   error={errors.identifier?.message}
                 />
@@ -93,7 +93,7 @@ export default function LoginScreen() {
                   label="Password"
                   secureTextEntry
                   autoComplete="current-password"
-                  value={field.value}
+                  value={field.value ?? ''}
                   onChangeText={field.onChange}
                   error={errors.password?.message}
                 />

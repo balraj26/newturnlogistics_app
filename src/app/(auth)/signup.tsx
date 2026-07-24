@@ -73,14 +73,14 @@ export default function SignupScreen() {
             control={control}
             name="organization_name"
             render={({ field }) => (
-              <Input label="Organization name" value={field.value} onChangeText={field.onChange} error={errors.organization_name?.message} />
+              <Input label="Organization name" value={field.value ?? ''} onChangeText={field.onChange} error={errors.organization_name?.message} />
             )}
           />
           <Controller
             control={control}
             name="company_name"
             render={({ field }) => (
-              <Input label="Company name" value={field.value} onChangeText={field.onChange} error={errors.company_name?.message} />
+              <Input label="Company name" value={field.value ?? ''} onChangeText={field.onChange} error={errors.company_name?.message} />
             )}
           />
 
@@ -113,28 +113,28 @@ export default function SignupScreen() {
             control={control}
             name="full_name"
             render={({ field }) => (
-              <Input label="Your full name" value={field.value} onChangeText={field.onChange} error={errors.full_name?.message} />
+              <Input label="Your full name" value={field.value ?? ''} onChangeText={field.onChange} error={errors.full_name?.message} />
             )}
           />
           <Controller
             control={control}
             name="email"
             render={({ field }) => (
-              <Input label="Email" keyboardType="email-address" autoCapitalize="none" value={field.value} onChangeText={field.onChange} error={errors.email?.message} />
+              <Input label="Email" keyboardType="email-address" autoCapitalize="none" value={field.value ?? ''} onChangeText={field.onChange} error={errors.email?.message} />
             )}
           />
           <Controller
             control={control}
             name="phone"
             render={({ field }) => (
-              <Input label="Phone number (optional)" keyboardType="phone-pad" value={field.value} onChangeText={field.onChange} />
+              <Input label="Phone number (optional)" keyboardType="phone-pad" value={field.value ?? ''} onChangeText={field.onChange} />
             )}
           />
           <Controller
             control={control}
             name="password"
             render={({ field }) => (
-              <Input label="Password" secureTextEntry value={field.value} onChangeText={field.onChange} error={errors.password?.message} />
+              <Input label="Password" secureTextEntry value={field.value ?? ''} onChangeText={field.onChange} error={errors.password?.message} />
             )}
           />
 
