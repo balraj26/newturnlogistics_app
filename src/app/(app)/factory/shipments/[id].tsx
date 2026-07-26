@@ -1,8 +1,9 @@
+import { useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { Button, Card, EmptyState, LoadingView, StatusPill, Text, TopAppBar } from '@/components/ui';
+import { Button, Card, EmptyState, Input, LoadingView, StatusPill, Text, TopAppBar } from '@/components/ui';
 import { ApiError } from '@/lib/api-client';
 import { shipmentStatusMeta } from '@/lib/shipment-status';
 import { shipmentsService } from '@/services/shipments';
@@ -46,9 +47,13 @@ export default function FactoryShipmentDetailScreen() {
     },
     onError,
   });
+  const [cancelReason, setCancelReason] = useState('');
   const cancel = useMutation({
-    mutationFn: () => shipmentsService.runAction(id, 'cancel'),
-    onSuccess: invalidate,
+    mutationFn: (reason: string) => shipmentsService.cancel(id, reason),
+    onSuccess: () => {
+      setCancelReason('');
+      invalidate();
+    },
     onError,
   });
 
@@ -138,7 +143,23 @@ export default function FactoryShipmentDetailScreen() {
         )}
 
         {canCancel && (
-          <Button label={cancel.isPending ? 'Cancelling...' : 'Cancel shipment'} variant="danger" onPress={() => cancel.mutate()} loading={cancel.isPending} />
+          <Card>
+            <Text variant="label" color="textSecondary">
+              CANCEL SHIPMENT
+            </Text>
+            <Input
+              placeholder="Reason for cancellation (required)"
+              value={cancelReason}
+              onChangeText={setCancelReason}
+            />
+            <Button
+              label={cancel.isPending ? 'Cancelling...' : 'Cancel shipment'}
+              variant="danger"
+              disabled={!cancelReason.trim()}
+              onPress={() => cancel.mutate(cancelReason.trim())}
+              loading={cancel.isPending}
+            />
+          </Card>
         )}
       </View>
     </View>

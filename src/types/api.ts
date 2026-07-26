@@ -214,6 +214,9 @@ export interface Shipment {
   delivered_at: string | null;
   gate_checked_in_at: string | null;
   gate_checked_out_at: string | null;
+  destination_gate_checked_in_at: string | null;
+  cancellation_reason: string | null;
+  archived_at: string | null;
 }
 
 /** GET /shipments/{id} only — a cross-tenant single-record summary once assigned. */
@@ -239,6 +242,46 @@ export interface ShipmentTimelineEvent {
   action: string;
   context: Record<string, unknown> | null;
   created_at: string;
+}
+
+export type LoadingEventType =
+  | "vehicle_verified"
+  | "driver_verified"
+  | "documents_verified"
+  | "loading_started"
+  | "partial_load"
+  | "weight_recorded"
+  | "seal_applied";
+
+export interface LoadingEvent {
+  id: UUID;
+  shipment_id: UUID;
+  event_type: LoadingEventType;
+  quantity_kg: number | null;
+  gross_weight_kg: number | null;
+  tare_weight_kg: number | null;
+  net_weight_kg: number | null;
+  seal_number: string | null;
+  seal_photo_document_id: UUID | null;
+  verified_by_user_id: UUID | null;
+  recorded_at: string;
+}
+
+export interface RejectionReason {
+  id: UUID;
+  code: string;
+  description: string;
+}
+
+export interface UnloadingEvent {
+  id: UUID;
+  shipment_id: UUID;
+  quantity_shipped_kg: number;
+  quantity_accepted_kg: number;
+  quantity_rejected_kg: number;
+  rejection_reason_id: UUID | null;
+  recorded_by_user_id: UUID | null;
+  recorded_at: string;
 }
 
 // ---- Documents -------------------------------------------------------

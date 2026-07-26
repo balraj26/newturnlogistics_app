@@ -21,7 +21,7 @@ const ACTIVE = new Set([
 
 export default function TransporterLoadsScreen() {
   const [refreshing, setRefreshing] = useState(false);
-  const { data, refetch } = useQuery({ queryKey: ['shipments'], queryFn: shipmentsService.list });
+  const { data, refetch } = useQuery({ queryKey: ['shipments'], queryFn: () => shipmentsService.list() });
 
   const shipments = data ?? [];
   const open = shipments.filter((s) => s.status === 'bidding_open');

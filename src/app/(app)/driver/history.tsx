@@ -14,7 +14,7 @@ const TERMINAL = new Set(['completed', 'cancelled']);
 export default function DriverHistoryScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const { driver, isLoading: isLoadingDriver } = useMyDriverProfile();
-  const { data, refetch, isLoading } = useQuery({ queryKey: ['shipments'], queryFn: shipmentsService.list });
+  const { data, refetch, isLoading } = useQuery({ queryKey: ['shipments'], queryFn: () => shipmentsService.list() });
 
   if (isLoadingDriver || isLoading) {
     return <LoadingView />;

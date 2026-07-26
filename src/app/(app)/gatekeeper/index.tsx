@@ -10,7 +10,7 @@ import type { Shipment } from '@/types/api';
 
 export default function GatekeeperHomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
-  const { data, refetch } = useQuery({ queryKey: ['shipments'], queryFn: shipmentsService.list });
+  const { data, refetch } = useQuery({ queryKey: ['shipments'], queryFn: () => shipmentsService.list() });
 
   const shipments = data ?? [];
   const awaitingCheckIn = shipments.filter((s) => s.status === 'driver_assigned');

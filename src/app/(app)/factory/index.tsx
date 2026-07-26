@@ -15,7 +15,7 @@ export default function FactoryShipmentsScreen() {
   const router = useRouter();
   const theme = useTheme();
   const [refreshing, setRefreshing] = useState(false);
-  const { data, refetch } = useQuery({ queryKey: ['shipments'], queryFn: shipmentsService.list });
+  const { data, refetch } = useQuery({ queryKey: ['shipments'], queryFn: () => shipmentsService.list() });
 
   const shipments = data ?? [];
   const drafts = shipments.filter((s) => s.status === 'draft');
