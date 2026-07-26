@@ -57,6 +57,17 @@ camera.
   tracking pings and flushes on reconnect, but there's no equivalent queue
   for other mutations (bids, status transitions) — those still fail
   outright when offline.
+- **No UI yet for the newer shipment sub-stage/reconciliation actions**:
+  `src/services/shipments.ts` has calls for `revert`, `archive`/
+  `unarchive`, gate verification (`gate-verify-vehicle`/`-driver`/
+  `-documents`), loading-event capture (weight/seal), and POD
+  reconciliation (accepted/rejected quantity) — see
+  `docs/shipment-specification.md` in `New Turn/backend`'s sibling repo
+  for the full design — but no screen calls any of them yet. Only
+  `cancel` (now requiring a reason) is wired into a screen
+  (`factory/shipments/[id].tsx`). The web dashboard has the same gap for
+  most of these — check `New Turn/frontend/components/dashboard/shipments/`
+  before assuming a form already exists to port from.
 
 ## Running natively on Android (local build, no EAS wait)
 
