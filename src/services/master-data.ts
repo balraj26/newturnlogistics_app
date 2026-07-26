@@ -68,7 +68,8 @@ export interface DriverInput {
   full_name: string;
   license_number: string;
   phone: string;
-  email?: string;
+  /** Temporarily mandatory — no OTP verification flow yet for driver-created accounts. */
+  email: string;
   password: string;
 }
 

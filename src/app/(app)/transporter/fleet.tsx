@@ -21,6 +21,9 @@ const driverSchema = z.object({
   full_name: z.string().min(2, 'Enter a full name'),
   license_number: z.string().min(2, 'Enter a license number'),
   phone: z.string().min(6, 'Enter a phone number'),
+  // Temporarily mandatory — no OTP verification flow exists yet for
+  // driver-created accounts. Revert to optional once one does.
+  email: z.string().email('Enter a valid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
 });
 type DriverValues = z.infer<typeof driverSchema>;
@@ -75,6 +78,9 @@ function AddDriverForm({ onDone }: { onDone: () => void }) {
       )} />
       <Controller control={control} name="phone" render={({ field }) => (
         <Input label="Phone" keyboardType="phone-pad" value={field.value ?? ''} onChangeText={field.onChange} error={errors.phone?.message} />
+      )} />
+      <Controller control={control} name="email" render={({ field }) => (
+        <Input label="Email" keyboardType="email-address" autoCapitalize="none" value={field.value ?? ''} onChangeText={field.onChange} error={errors.email?.message} />
       )} />
       <Controller control={control} name="password" render={({ field }) => (
         <Input label="Temporary password" secureTextEntry value={field.value ?? ''} onChangeText={field.onChange} error={errors.password?.message} />
