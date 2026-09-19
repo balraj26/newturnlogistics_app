@@ -65,8 +65,15 @@ export default function NewShipmentScreen() {
     queryFn: () => masterDataService.listLocations(),
   });
 
+  // The unfiltered list only returns the company's own addresses; a customer's
+  // addresses are only returned when filtered by business_partner_id.
+  const { data: destinationCandidates = [] } = useQuery({
+    queryKey: ['master-data', 'locations', 'customer', customerId],
+    queryFn: () => masterDataService.listLocations(customerId!),
+    enabled: !!customerId,
+  });
+
   const originCandidates = (locations ?? []).filter((l) => l.business_partner_id === null);
-  const destinationCandidates = (locations ?? []).filter((l) => l.business_partner_id === customerId);
 
   const {
     control,
