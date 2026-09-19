@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, StyleSheet, Switch, View } from 'react-native';
+import { Alert, Image, StyleSheet, Switch, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
@@ -10,7 +10,7 @@ import { nextDriverAction, shipmentStatusMeta } from '@/lib/shipment-status';
 import { documentsService } from '@/services/documents';
 import { shipmentsService } from '@/services/shipments';
 import { useShipmentLocationSharing } from '@/hooks/useShipmentLocationSharing';
-import { spacing } from '@/theme/tokens';
+import { radius, spacing } from '@/theme/tokens';
 import { useTheme } from '@/theme/useTheme';
 
 export default function DriverShipmentDetailScreen() {
@@ -24,6 +24,15 @@ export default function DriverShipmentDetailScreen() {
     queryFn: () => shipmentsService.get(id),
   });
   const locationSharing = useShipmentLocationSharing(id);
+
+  // What this driver has uploaded for the shipment (the API only returns the
+  // caller's own documents to a driver). Newest version first per type, so
+  // the first POD is the current one.
+  const { data: documents } = useQuery({
+    queryKey: ['documents', 'shipment', id],
+    queryFn: () => documentsService.listForOwner('shipment', id),
+  });
+  const pod = documents?.find((d) => d.document_type === 'pod');
 
   const advance = useMutation({
     mutationFn: (action: ReturnType<typeof nextDriverAction>) =>
@@ -63,7 +72,8 @@ export default function DriverShipmentDetailScreen() {
         owner_id: shipment.id,
         file: { uri: asset.uri, name: `pod-${shipment.id}.jpg`, type: 'image/jpeg' },
       });
-      Alert.alert('Uploaded', 'Proof of delivery photo saved.');
+      await queryClient.invalidateQueries({ queryKey: ['documents', 'shipment', id] });
+      Alert.alert('Uploaded', 'Check the photo below. Retake it if it is not clear.');
     } catch (error) {
       Alert.alert('Upload failed', error instanceof ApiError ? error.message : 'Something went wrong');
     } finally {
@@ -134,9 +144,28 @@ export default function DriverShipmentDetailScreen() {
           />
         )}
 
+        {pod && (
+          <Card>
+            <View style={styles.row}>
+              <Text variant="title" style={styles.grow}>
+                Proof of delivery
+              </Text>
+              <StatusPill label={`Version ${pod.version}`} type="success" />
+            </View>
+            <Image
+              // Re-keyed per version so a retake replaces the cached photo.
+              key={pod.id}
+              source={documentsService.imageSource(pod.id)}
+              style={[styles.podImage, { backgroundColor: theme.colors.border }]}
+              resizeMode="cover"
+              accessibilityLabel="Uploaded proof of delivery photo"
+            />
+          </Card>
+        )}
+
         {shipment.status === 'arrived_at_destination' && (
           <Button
-            label={isUploadingPod ? 'Uploading...' : 'Capture proof of delivery'}
+            label={isUploadingPod ? 'Uploading...' : pod ? 'Retake proof of delivery' : 'Capture proof of delivery'}
             variant="secondary"
             onPress={capturePod}
             loading={isUploadingPod}
@@ -152,4 +181,5 @@ const styles = StyleSheet.create({
   content: { padding: spacing.md, gap: spacing.md },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   grow: { flex: 1 },
+  podImage: { width: '100%', aspectRatio: 4 / 3, borderRadius: radius.md },
 });

@@ -1,7 +1,7 @@
 import { useAuthStore } from '@/store/auth-store';
 import type { ApiErrorBody, TokenPair } from '@/types/api';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8000';
+export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8000';
 
 export class ApiError extends Error {
   constructor(

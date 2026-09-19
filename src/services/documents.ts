@@ -1,4 +1,5 @@
-import { apiFetch } from '@/lib/api-client';
+import { API_URL, apiFetch } from '@/lib/api-client';
+import { useAuthStore } from '@/store/auth-store';
 import type { Document, DocumentOwnerType, DocumentType, UUID } from '@/types/api';
 
 export interface DocumentInput {
@@ -43,4 +44,13 @@ export const documentsService = {
   },
 
   fileUrl: (documentId: UUID) => `/api/v1/documents/${documentId}/file`,
+
+  /** An <Image source> for an uploaded file. The download endpoint requires
+   * the bearer token, which a plain uri can't carry — the token is current
+   * because the list call that produced the document just refreshed it if
+   * it had expired. */
+  imageSource: (documentId: UUID) => ({
+    uri: `${API_URL}/api/v1/documents/${documentId}/file`,
+    headers: { Authorization: `Bearer ${useAuthStore.getState().accessToken ?? ''}` },
+  }),
 };
