@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -39,24 +39,26 @@ export function TopAppBar({ title, back = false, onMenuPress, right }: TopAppBar
     >
       <View style={styles.side}>
         {back && (
-          <Ionicons.Button
-            name="chevron-back"
-            size={24}
-            color={theme.colors.text}
-            backgroundColor="transparent"
+          <Pressable
             onPress={() => router.back()}
-            iconStyle={styles.backIcon}
-          />
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+            style={styles.iconButton}
+          >
+            <Ionicons name="chevron-back" size={24} color={theme.colors.text} />
+          </Pressable>
         )}
         {!back && onMenuPress && (
-          <Ionicons.Button
-            name="menu"
-            size={24}
-            color={theme.colors.text}
-            backgroundColor="transparent"
+          <Pressable
             onPress={onMenuPress}
-            iconStyle={styles.backIcon}
-          />
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Open menu"
+            style={styles.iconButton}
+          >
+            <Ionicons name="menu" size={24} color={theme.colors.text} />
+          </Pressable>
         )}
       </View>
       <Text variant="title" style={styles.title} numberOfLines={1}>
@@ -76,6 +78,6 @@ const styles = StyleSheet.create({
   },
   side: { width: minTouchTarget, alignItems: 'flex-start' },
   rightSide: { alignItems: 'flex-end' },
-  backIcon: { marginRight: 0 },
+  iconButton: { width: minTouchTarget, height: minTouchTarget, alignItems: 'center', justifyContent: 'center' },
   title: { flex: 1, textAlign: 'center' },
 });

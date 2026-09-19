@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { SectionList, StyleSheet, View } from 'react-native';
+import { Pressable, SectionList, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
@@ -79,14 +79,15 @@ export default function HomeScreen() {
         title="NewTurn"
         onMenuPress={() => setMenuOpen(true)}
         right={
-          <Ionicons.Button
-            name="notifications-outline"
-            size={24}
-            color={theme.colors.text}
-            backgroundColor="transparent"
+          <Pressable
             onPress={() => router.push('/(app)/home/notifications')}
-            iconStyle={{ marginRight: 0 }}
-          />
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Notifications"
+            style={styles.iconButton}
+          >
+            <Ionicons name="notifications-outline" size={24} color={theme.colors.text} />
+          </Pressable>
         }
       />
 
@@ -106,15 +107,15 @@ export default function HomeScreen() {
           onPress={() => setScope('loads')}
         />
         {isConsignor && scope === 'loads' && (
-          <Ionicons.Button
-            name="add-circle"
-            size={28}
-            color={theme.colors.navy}
-            backgroundColor="transparent"
+          <Pressable
             onPress={() => router.push('/(app)/home/shipments/new')}
-            iconStyle={{ marginRight: 0 }}
-            style={styles.addButton}
-          />
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Post a new load"
+            style={[styles.iconButton, styles.addButton]}
+          >
+            <Ionicons name="add-circle" size={28} color={theme.colors.navy} />
+          </Pressable>
         )}
       </View>
 
@@ -156,6 +157,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   toggleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, padding: spacing.md, paddingBottom: 0 },
+  iconButton: { minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center' },
   addButton: { marginLeft: 'auto' },
   list: { padding: spacing.md, flexGrow: 1 },
   sectionHeader: { marginTop: spacing.sm, marginBottom: spacing.xs },
