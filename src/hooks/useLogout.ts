@@ -3,12 +3,12 @@ import * as Notifications from 'expo-notifications';
 
 import { authService } from '@/services/auth';
 import { notificationsService } from '@/services/notifications';
-import { queryClient } from '@/lib/query-client';
 import { useAuthStore } from '@/store/auth-store';
 
 /** Revokes the refresh token, unregisters this device's push token (so a
  * signed-out phone stops receiving push for the account that just left),
- * clears local session state and the query cache, and returns to login. Best-effort: network
+ * clears local session state (which also drops the query cache, see
+ * auth-store), and returns to login. Best-effort: network
  * failures on the revoke/unregister calls never block getting the user
  * signed out locally.
  */
@@ -27,9 +27,6 @@ export function useLogout() {
         await authService.logout(refreshToken).catch(() => undefined);
       }
     } finally {
-      // Drop every cached query so the next account can't briefly see (or be
-      // routed by) the previous account's role, permissions, or shipments.
-      queryClient.clear();
       clearSession();
       router.replace('/(auth)/login');
     }

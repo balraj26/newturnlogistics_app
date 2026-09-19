@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
+import { queryClient } from '@/lib/query-client';
 import { secureStorage } from '@/lib/secure-storage';
 import type { TokenPair, User } from '@/types/api';
 
@@ -45,7 +46,15 @@ export const useAuthStore = create<AuthState>()(
         })),
       setUser: (user) => set({ user }),
       setHasHydrated: (value) => set({ hasHydrated: value }),
-      clearSession: () => set({ accessToken: null, refreshToken: null, user: null }),
+      // Every path that ends a session goes through here — explicit logout
+      // and a failed token refresh (api-client) alike — so drop the cached
+      // queries too: otherwise the next account to sign in on this device is
+      // routed by the previous account's role/permissions and briefly sees
+      // its data.
+      clearSession: () => {
+        queryClient.clear();
+        set({ accessToken: null, refreshToken: null, user: null });
+      },
       setPendingVerification: (pending) => set({ pendingVerification: pending }),
       clearPendingVerification: () => set({ pendingVerification: null }),
     }),
