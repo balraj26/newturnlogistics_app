@@ -8,9 +8,11 @@ import type { Shipment } from '@/types/api';
 
 interface ShipmentListItemProps {
   shipment: Shipment;
-  /** Which role's detail route to push to — each role owns its own
-   * shipments/[id] screen since the actions available differ by persona. */
-  basePath: '/(app)/factory' | '/(app)/transporter' | '/(app)/driver' | '/(app)/gatekeeper';
+  /** Which shell's detail route to push to. Consignor and Transporter
+   * share `/(app)/home` (see (app)/home/_layout.tsx); Driver and
+   * Gatekeeper keep their own distinct routes since their available
+   * actions differ enough to warrant separate detail screens. */
+  basePath: '/(app)/home' | '/(app)/driver' | '/(app)/gatekeeper';
 }
 
 export function ShipmentListItem({ shipment, basePath }: ShipmentListItemProps) {

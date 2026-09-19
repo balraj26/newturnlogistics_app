@@ -83,7 +83,7 @@ export default function NewShipmentScreen() {
         destination_location_id: destinationId!,
       }),
     onSuccess: (shipment) => {
-      router.replace(`/(app)/factory/shipments/${shipment.id}` as never);
+      router.replace(`/(app)/home/shipments/${shipment.id}` as never);
     },
     onError: (error) => Alert.alert('Failed', error instanceof ApiError ? error.message : 'Something went wrong'),
   });

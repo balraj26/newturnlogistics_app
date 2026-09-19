@@ -7,3 +7,4 @@ export * from './StatusPill';
 export * from './LoadingView';
 export * from './EmptyState';
 export * from './TopAppBar';
+export * from './GoogleSignInButton';

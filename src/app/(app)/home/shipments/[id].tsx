@@ -1,4 +1,5 @@
-import { Alert, StyleSheet, View } from 'react-native';
+import { useState } from 'react';
+import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Controller, useForm, type Resolver } from 'react-hook-form';
@@ -8,9 +9,9 @@ import { z } from 'zod';
 import { Button, Card, EmptyState, Input, LoadingView, StatusPill, Text, TopAppBar } from '@/components/ui';
 import { ApiError } from '@/lib/api-client';
 import { nextDriverAction, shipmentStatusMeta } from '@/lib/shipment-status';
+import { useCurrentRole } from '@/hooks/useCurrentRole';
 import { masterDataService } from '@/services/master-data';
 import { shipmentsService } from '@/services/shipments';
-import { useCurrentRole } from '@/hooks/useCurrentRole';
 import { spacing } from '@/theme/tokens';
 
 const bidSchema = z.object({
@@ -20,10 +21,17 @@ const bidSchema = z.object({
 });
 type BidValues = z.infer<typeof bidSchema>;
 
-export default function TransporterShipmentDetailScreen() {
+/** Shared Consignor/Transporter shipment detail — the caller's actual role
+ * (from useCurrentRole, backed by company_type + permissions) decides
+ * which action blocks render, same as it always has; what changed is that
+ * both roles now land on this one route instead of two separate screens
+ * (see (app)/home/_layout.tsx). */
+export default function HomeShipmentDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const queryClient = useQueryClient();
-  const { company } = useCurrentRole();
+  const { role, company } = useCurrentRole();
+  const isConsignor = role === 'factory';
+  const isTransporter = role === 'transporter';
 
   const { data: shipment, isLoading } = useQuery({
     queryKey: ['shipments', id],
@@ -37,12 +45,16 @@ export default function TransporterShipmentDetailScreen() {
   const { data: vehicles } = useQuery({
     queryKey: ['master-data', 'vehicles'],
     queryFn: masterDataService.listVehicles,
-    enabled: shipment?.status === 'transporter_selected',
+    enabled: isTransporter && shipment?.status === 'transporter_selected',
   });
   const { data: drivers } = useQuery({
     queryKey: ['master-data', 'drivers'],
     queryFn: masterDataService.listDrivers,
-    enabled: shipment?.status === 'vehicle_assigned',
+    enabled: isTransporter && shipment?.status === 'vehicle_assigned',
+  });
+  const { data: timeline } = useQuery({
+    queryKey: ['shipments', id, 'timeline'],
+    queryFn: () => shipmentsService.timeline(id),
   });
 
   const invalidate = () => {
@@ -52,6 +64,19 @@ export default function TransporterShipmentDetailScreen() {
   const onError = (error: unknown) =>
     Alert.alert('Action failed', error instanceof ApiError ? error.message : 'Something went wrong');
 
+  const publish = useMutation({
+    mutationFn: () => shipmentsService.runAction(id, 'publish'),
+    onSuccess: invalidate,
+    onError,
+  });
+  const acceptBid = useMutation({
+    mutationFn: (bidId: string) => shipmentsService.acceptBid(id, bidId),
+    onSuccess: () => {
+      invalidate();
+      queryClient.invalidateQueries({ queryKey: ['shipments', id, 'bids'] });
+    },
+    onError,
+  });
   const submitBid = useMutation({
     mutationFn: (values: BidValues) => shipmentsService.submitBid(id, values),
     onSuccess: () => {
@@ -75,6 +100,15 @@ export default function TransporterShipmentDetailScreen() {
     onSuccess: invalidate,
     onError,
   });
+  const [cancelReason, setCancelReason] = useState('');
+  const cancel = useMutation({
+    mutationFn: (reason: string) => shipmentsService.cancel(id, reason),
+    onSuccess: () => {
+      setCancelReason('');
+      invalidate();
+    },
+    onError,
+  });
 
   const {
     control,
@@ -87,13 +121,14 @@ export default function TransporterShipmentDetailScreen() {
   }
 
   const meta = shipmentStatusMeta(shipment.status);
+  const canCancel = !['delivered', 'completed', 'cancelled'].includes(shipment.status);
   const myBid = bids?.find((b) => b.transporter_id === company?.id);
-  const action = nextDriverAction(shipment.status);
+  const overrideAction = nextDriverAction(shipment.status);
 
   return (
     <View style={styles.flex}>
       <TopAppBar title={`Shipment #${shipment.id.slice(0, 8)}`} back />
-      <View style={styles.content}>
+      <ScrollView contentContainerStyle={styles.content}>
         <Card>
           <View style={styles.row}>
             <Text variant="title" style={styles.grow}>
@@ -104,9 +139,43 @@ export default function TransporterShipmentDetailScreen() {
           <Text variant="body" color="textSecondary">
             {shipment.weight_kg.toLocaleString()} kg &middot; required {shipment.required_date}
           </Text>
+          {shipment.special_instructions && (
+            <Text variant="body" color="textSecondary">
+              {shipment.special_instructions}
+            </Text>
+          )}
         </Card>
 
-        {shipment.status === 'bidding_open' && (
+        {isConsignor && shipment.status === 'draft' && (
+          <Button label={publish.isPending ? 'Publishing...' : 'Publish for bidding'} onPress={() => publish.mutate()} loading={publish.isPending} />
+        )}
+
+        {isConsignor && shipment.status === 'bidding_open' && (
+          <Card>
+            <Text variant="title">Bids</Text>
+            {(bids ?? []).length === 0 && <EmptyState title="No bids yet" body="Linked transporters can bid once you've published this shipment." />}
+            {(bids ?? []).map((bid) => (
+              <View key={bid.id} style={styles.bidRow}>
+                <View style={styles.grow}>
+                  <Text variant="body" weight="semibold">
+                    ₹{bid.price} &middot; ETA {bid.eta_hours}h
+                  </Text>
+                  {bid.notes && (
+                    <Text variant="caption" color="textSecondary">
+                      {bid.notes}
+                    </Text>
+                  )}
+                </View>
+                {bid.status === 'submitted' && (
+                  <Button label="Accept" size="sm" fullWidth={false} onPress={() => acceptBid.mutate(bid.id)} loading={acceptBid.isPending} />
+                )}
+                {bid.status !== 'submitted' && <StatusPill label={bid.status} type={bid.status === 'accepted' ? 'success' : 'danger'} />}
+              </View>
+            ))}
+          </Card>
+        )}
+
+        {isTransporter && shipment.status === 'bidding_open' && (
           <Card>
             {myBid ? (
               <>
@@ -147,10 +216,10 @@ export default function TransporterShipmentDetailScreen() {
           </Card>
         )}
 
-        {shipment.status === 'transporter_selected' && (
+        {isTransporter && shipment.status === 'transporter_selected' && (
           <Card>
             <Text variant="title">Assign a vehicle</Text>
-            {(vehicles ?? []).length === 0 && <EmptyState title="No vehicles yet" body="Add one from the Fleet tab first." />}
+            {(vehicles ?? []).length === 0 && <EmptyState title="No vehicles yet" body="Add one from Master Data first." />}
             {(vehicles ?? []).map((vehicle) => (
               <Button
                 key={vehicle.id}
@@ -163,10 +232,10 @@ export default function TransporterShipmentDetailScreen() {
           </Card>
         )}
 
-        {shipment.status === 'vehicle_assigned' && (
+        {isTransporter && shipment.status === 'vehicle_assigned' && (
           <Card>
             <Text variant="title">Assign a driver</Text>
-            {(drivers ?? []).length === 0 && <EmptyState title="No drivers yet" body="Add one from the Fleet tab first." />}
+            {(drivers ?? []).length === 0 && <EmptyState title="No drivers yet" body="Add one from Master Data first." />}
             {(drivers ?? []).map((driver) => (
               <Button
                 key={driver.id}
@@ -196,15 +265,46 @@ export default function TransporterShipmentDetailScreen() {
           </Card>
         )}
 
-        {action && (
+        {(timeline ?? []).length > 0 && (
+          <Card>
+            <Text variant="title">Timeline</Text>
+            {(timeline ?? []).map((event, index) => (
+              <Text key={index} variant="caption" color="textSecondary">
+                {new Date(event.created_at).toLocaleString()} &middot; {event.action}
+              </Text>
+            ))}
+          </Card>
+        )}
+
+        {isTransporter && overrideAction && (
           <Button
-            label={advance.isPending ? 'Updating...' : `${action.label} (override)`}
+            label={advance.isPending ? 'Updating...' : `${overrideAction.label} (override)`}
             variant="ghost"
-            onPress={() => advance.mutate(action.action)}
+            onPress={() => advance.mutate(overrideAction.action)}
             loading={advance.isPending}
           />
         )}
-      </View>
+
+        {canCancel && (
+          <Card>
+            <Text variant="label" color="textSecondary">
+              CANCEL SHIPMENT
+            </Text>
+            <Input
+              placeholder="Reason for cancellation (required)"
+              value={cancelReason}
+              onChangeText={setCancelReason}
+            />
+            <Button
+              label={cancel.isPending ? 'Cancelling...' : 'Cancel shipment'}
+              variant="danger"
+              disabled={!cancelReason.trim()}
+              onPress={() => cancel.mutate(cancelReason.trim())}
+              loading={cancel.isPending}
+            />
+          </Card>
+        )}
+      </ScrollView>
     </View>
   );
 }
@@ -214,4 +314,5 @@ const styles = StyleSheet.create({
   content: { padding: spacing.md, gap: spacing.md },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   grow: { flex: 1 },
+  bidRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xs },
 });

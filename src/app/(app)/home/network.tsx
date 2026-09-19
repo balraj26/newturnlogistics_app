@@ -31,7 +31,7 @@ export default function NetworkScreen() {
 
   return (
     <View style={styles.flex}>
-      <TopAppBar title="Network" />
+      <TopAppBar title="Network" back />
       <ScrollView contentContainerStyle={styles.content}>
         <Card>
           <Text variant="title">Invite a transporter</Text>

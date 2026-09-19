@@ -46,6 +46,16 @@ export const authService = {
       skipAuth: true,
     }),
 
+  /** Native Google Sign-In (Android): the client already holds an ID token
+   * from the on-device SDK — plain JSON in/out, no redirect/fragment dance
+   * (that's the web-only /auth/google/login|callback flow). */
+  googleTokenSignIn: (idToken: string) =>
+    apiFetch<TokenPair>('/api/v1/auth/google/token', {
+      method: 'POST',
+      body: { id_token: idToken },
+      skipAuth: true,
+    }),
+
   login: (data: LoginInput) =>
     apiFetch<LoginResponse>('/api/v1/auth/login', { method: 'POST', body: data, skipAuth: true }),
 

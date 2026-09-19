@@ -91,12 +91,25 @@ export const LIFECYCLE_ACTIONS = [
 
 export type LifecycleAction = (typeof LIFECYCLE_ACTIONS)[number];
 
+export interface ListShipmentsOptions {
+  includeArchived?: boolean;
+  /** Forces one side of the backend's company_type branch regardless of
+   * the caller's own company_type — see docs/shipment-specification.md §7.
+   * Powers the shared Consignor/Transporter home's Trips/Loads toggle with
+   * zero client-side role branching: both roles call the same options,
+   * the backend naturally returns an empty list for the "wrong" scope. */
+  scope?: 'loads' | 'trips';
+}
+
 /** Ported from New Turn/frontend/services/shipments.ts. */
 export const shipmentsService = {
-  list: (includeArchived = false) =>
-    apiFetch<Shipment[]>(
-      `/api/v1/shipments${includeArchived ? '?include_archived=true' : ''}`
-    ),
+  list: ({ includeArchived = false, scope }: ListShipmentsOptions = {}) => {
+    const params = new URLSearchParams();
+    if (includeArchived) params.set('include_archived', 'true');
+    if (scope) params.set('scope', scope);
+    const query = params.toString();
+    return apiFetch<Shipment[]>(`/api/v1/shipments${query ? `?${query}` : ''}`);
+  },
   get: (id: UUID) => apiFetch<ShipmentDetail>(`/api/v1/shipments/${id}`),
   create: (data: ShipmentInput) =>
     apiFetch<Shipment>('/api/v1/shipments', { method: 'POST', body: data }),

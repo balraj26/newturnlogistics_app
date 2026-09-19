@@ -5,7 +5,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-import { Button, Input, Screen, Text } from '@/components/ui';
+import { Button, GoogleSignInButton, Input, Screen, Text } from '@/components/ui';
+import { useGoogleSignIn } from '@/hooks/useGoogleSignIn';
 import { ApiError } from '@/lib/api-client';
 import { authService } from '@/services/auth';
 import { usersService } from '@/services/users';
@@ -24,6 +25,7 @@ export default function LoginScreen() {
   const setUser = useAuthStore((state) => state.setUser);
   const setPendingVerification = useAuthStore((state) => state.setPendingVerification);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { signIn: signInWithGoogle, isSigningIn: isGoogleSigningIn } = useGoogleSignIn();
 
   const {
     control,
@@ -55,6 +57,28 @@ export default function LoginScreen() {
       Alert.alert('Login failed', error instanceof ApiError ? error.message : 'Something went wrong');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const onGoogleSignIn = async () => {
+    try {
+      const me = await signInWithGoogle();
+      if (me) {
+        router.replace('/(app)');
+      }
+    } catch (error) {
+      // Surface the real underlying error (native module errors carry a
+      // .code alongside .message) — never fall back to a silent generic
+      // string, so a failure is actually diagnosable from the device itself.
+      let detail = 'Something went wrong';
+      if (error instanceof ApiError) {
+        detail = error.message;
+      } else if (error && typeof error === 'object') {
+        const code = 'code' in error ? String((error as { code?: unknown }).code) : undefined;
+        const message = error instanceof Error ? error.message : undefined;
+        detail = [code, message].filter(Boolean).join(': ') || JSON.stringify(error);
+      }
+      Alert.alert('Google sign-in failed', detail);
     }
   };
 
@@ -103,6 +127,17 @@ export default function LoginScreen() {
             <Button label={isSubmitting ? 'Logging in...' : 'Log in'} onPress={handleSubmit(onSubmit)} loading={isSubmitting} />
           </View>
 
+          {Platform.OS === 'android' && (
+            <>
+              <View style={styles.divider}>
+                <Text variant="caption" color="textSecondary">
+                  OR
+                </Text>
+              </View>
+              <GoogleSignInButton onPress={onGoogleSignIn} loading={isGoogleSigningIn} />
+            </>
+          )}
+
           <View style={styles.footer}>
             <Text variant="body" color="textSecondary">
               Don&apos;t have an account?{' '}
@@ -125,5 +160,6 @@ const styles = StyleSheet.create({
   center: { textAlign: 'center' },
   logo: { width: 160, height: 64, alignSelf: 'center', marginBottom: spacing.md },
   form: { gap: spacing.md, marginTop: spacing.lg },
+  divider: { alignItems: 'center', marginTop: spacing.lg, marginBottom: spacing.sm },
   footer: { flexDirection: 'row', justifyContent: 'center', marginTop: spacing.lg },
 });

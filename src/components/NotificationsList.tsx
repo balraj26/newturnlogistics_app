@@ -39,9 +39,16 @@ function NotificationRow({ notification, onPress }: { notification: Notification
   );
 }
 
-/** Shared across all four persona tab groups — every role reads its own
- * notifications the same way (GET /notifications, tap-to-mark-read). */
-export function NotificationsList() {
+interface NotificationsListProps {
+  /** Set when reached via a push (e.g. the shared home shell's bell icon)
+   * rather than as a bottom tab — Driver/Gatekeeper still use this as a
+   * tab, where no back button is wanted. */
+  back?: boolean;
+}
+
+/** Shared across every persona — every role reads its own notifications
+ * the same way (GET /notifications, tap-to-mark-read). */
+export function NotificationsList({ back = false }: NotificationsListProps) {
   const queryClient = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
 
@@ -63,7 +70,7 @@ export function NotificationsList() {
 
   return (
     <View style={styles.flex}>
-      <TopAppBar title="Notifications" />
+      <TopAppBar title="Notifications" back={back} />
       <FlashList
         data={data ?? []}
         keyExtractor={(item) => item.id}
