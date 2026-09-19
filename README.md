@@ -1,10 +1,23 @@
 # NewTurn Logistics — mobile app
 
-React Native (Expo, TypeScript, Expo Router) companion app to
+React Native (Expo SDK 54, TypeScript, Expo Router) companion app to
 [`New Turn/backend`](../New%20Turn/backend) and
-[`New Turn/frontend`](../New%20Turn/frontend) — one app, four persona tab
-groups resolved by role after login (see `src/hooks/useCurrentRole.ts`):
-Factory Owner, Transporter, Driver, Gatekeeper.
+[`New Turn/frontend`](../New%20Turn/frontend) — one app, four personas
+resolved by role after login (see `src/hooks/useCurrentRole.ts`), served by
+three navigation shells:
+
+| Persona | Shell | Navigation |
+|---|---|---|
+| Factory Owner (Consignor) | `(app)/home/` | Stack + side menu, Trips/Loads home |
+| Transporter | `(app)/home/` (shared with Consignor) | Stack + side menu, Trips/Loads home |
+| Driver | `(app)/driver/` | Bottom tabs: Active, History, Alerts, Profile |
+| Gatekeeper | `(app)/gatekeeper/` | Bottom tabs: Gate, Alerts, Profile |
+
+Project-wide context (architecture, deployment, shipment-spec workflow) lives
+in [`New Turn/CLAUDE.md`](../New%20Turn/CLAUDE.md). Shipment business rules
+are defined by
+[`New Turn/docs/shipment-specification.md`](../New%20Turn/docs/shipment-specification.md)
+— read it before any shipment-related mobile change.
 
 ## Setup
 
@@ -13,6 +26,15 @@ npm install
 cp .env.example .env   # point EXPO_PUBLIC_API_URL at your backend
 npx expo start
 ```
+
+Two env vars, both read from `.env` (see `.env.example`):
+`EXPO_PUBLIC_API_URL` (backend base URL) and
+`EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` (the Web OAuth client the backend
+verifies Google ID tokens against — not a secret).
+
+Google Sign-In is a native module, so it does **not** work in Expo Go —
+use a development build (`npx expo run:android`, or an EAS `development`
+profile build). See the Google Sign-In section below.
 
 `EXPO_PUBLIC_API_URL` must be reachable from wherever the app runs — use
 your machine's LAN IP (not `localhost`) for a physical device or the
@@ -35,8 +57,28 @@ camera.
   (`src/store/auth-store.ts`) swaps `localStorage` for `expo-secure-store`.
 - `src/app/(auth)/` — login, signup, OTP email verification.
 - `src/app/(app)/` — authenticated shell; `(app)/index.tsx` resolves role
-  and redirects into `factory/`, `transporter/`, `driver/`, or
-  `gatekeeper/`, each with its own `Tabs` layout.
+  and redirects into `home/` (Factory Owner and Transporter), `driver/`, or
+  `gatekeeper/`.
+  - `home/` is a plain `Stack` (no tab bar). `home/index.tsx` is a
+    Trips/Loads toggle over `GET /shipments?scope=trips|loads` with a
+    persistent notification bell; `components/SideMenu.tsx` (a custom
+    slide-in panel, not Expo Router's Drawer) links to Master Data,
+    Transporter Network (Consignor only), My Profile, and Logout. Other
+    screens: `shipments/new` (create), `shipments/[id]` (detail, bids,
+    vehicle/driver assignment, lifecycle override, cancel), `master-data`,
+    `network`, `notifications`, `profile`.
+  - `driver/` and `gatekeeper/` each use a `Tabs` layout, with a
+    `shipments/[id]` detail screen hidden from the tab bar. The driver's
+    detail screen runs execute-own lifecycle actions and uploads
+    proof-of-pickup/delivery photos and shows the latest uploaded photo (with a
+    version badge and a retake option) so the driver can verify it; the
+    gatekeeper's does gate check-in/out.
+- `src/components/` — shared, non-primitive UI: `ShipmentListItem`,
+  `NotificationsList`, `ProfileScreen` (used by every persona), `SideMenu`.
+- `src/hooks/` — `useCurrentRole`, `useGoogleSignIn`, `useLogout`,
+  `useMyDriverProfile`, `useRegisterPushToken`, `useShipmentLocationSharing`.
+- `src/lib/` — `api-client`, `query-client`, `secure-storage`,
+  `ping-queue` (offline location-ping queue), `shipment-status`.
 
 ## Google Sign-In (Android only, added 2026-07-26)
 
@@ -132,11 +174,15 @@ the real one.
   background tracking needs `Location.startLocationUpdatesAsync` +
   `expo-task-manager`, which requires a custom dev-client/production
   build — it does not run in Expo Go on iOS since SDK 43.
-- **Team/roles, finance, and most master-data CRUD** (locations, materials,
-  routes, business partners) are web-dashboard-only for now — the mobile
-  app assumes those are set up there first; it covers the workflows that
-  actually need to happen in the field (shipment lifecycle, bidding,
-  gate check-in/out, proof of delivery).
+- **Team/roles, finance, and administration** are web-dashboard-only for
+  now. **Master data** (vehicles, drivers, trailers, materials, business
+  partners, locations, warehouses, routes) is available under
+  `home/master-data` for Consignors and Transporters, but list + create
+  only — no edit or delete from mobile. The app covers the workflows that
+  need to happen in the field (shipment lifecycle, bidding, gate
+  check-in/out, proof of delivery) plus basic master-data setup.
+- **Master Admin** (cross-tenant act-as-company) is web-only and is not
+  expected on mobile.
 - **Offline ping queue** (`src/lib/ping-queue.ts`) persists failed
   tracking pings and flushes on reconnect, but there's no equivalent queue
   for other mutations (bids, status transitions) — those still fail
@@ -144,14 +190,19 @@ the real one.
 - **No UI yet for the newer shipment sub-stage/reconciliation actions**:
   `src/services/shipments.ts` has calls for `revert`, `archive`/
   `unarchive`, gate verification (`gate-verify-vehicle`/`-driver`/
-  `-documents`), loading-event capture (weight/seal), and POD
-  reconciliation (accepted/rejected quantity) — see
-  `docs/shipment-specification.md` in `New Turn/backend`'s sibling repo
-  for the full design — but no screen calls any of them yet. Only
-  `cancel` (now requiring a reason) is wired into a screen
-  (`factory/shipments/[id].tsx`). The web dashboard has the same gap for
-  most of these — check `New Turn/frontend/components/dashboard/shipments/`
-  before assuming a form already exists to port from.
+  `-documents`), destination gate check-in, loading-event capture
+  (weight/seal), and POD reconciliation (accepted/rejected quantity) — see
+  `New Turn/docs/shipment-specification.md` §7 for the full API mapping —
+  but no screen calls any of them yet. Wired into screens today: `publish`,
+  bidding (submit/accept), `assign-vehicle`/`assign-driver`, the execution
+  transitions (`start-pickup` through `mark-delivered`; the driver screen
+  drives them, and a Transporter gets an "(override)" button on the home
+  detail screen), `gate-check-in`/`gate-check-out`, and `cancel` (requires
+  a reason; `home/shipments/[id].tsx`). `complete` (factory sign-off after
+  delivery) is also not exposed on any screen yet. See
+  `New Turn/frontend/components/dashboard/shipments/shipment-actions.tsx`
+  for revert, archive/unarchive and gate-verify buttons to port from; the
+  web has no loading-event or POD-reconciliation form either.
 
 ## Running natively on Android (local build, no EAS wait)
 
