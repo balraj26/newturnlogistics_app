@@ -122,6 +122,7 @@ export const masterDataService = {
     apiFetch<Trailer>('/api/v1/master-data/trailers', { method: 'POST', body: data }),
 
   listDrivers: () => apiFetch<Driver[]>('/api/v1/master-data/drivers'),
+  getMyDriverRecord: () => apiFetch<Driver>('/api/v1/master-data/drivers/me'),
   createDriver: (data: DriverInput) =>
     apiFetch<Driver>('/api/v1/master-data/drivers', { method: 'POST', body: data }),
   transferDriver: (driverId: UUID, data: DriverTransferInput) =>
