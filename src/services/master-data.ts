@@ -2,6 +2,7 @@ import { apiFetch } from '@/lib/api-client';
 import type {
   BusinessPartner,
   Driver,
+  DriverTransfer,
   Location,
   Material,
   PartnerType,
@@ -124,7 +125,7 @@ export const masterDataService = {
   createDriver: (data: DriverInput) =>
     apiFetch<Driver>('/api/v1/master-data/drivers', { method: 'POST', body: data }),
   transferDriver: (driverId: UUID, data: DriverTransferInput) =>
-    apiFetch<Driver>(`/api/v1/master-data/drivers/${driverId}/transfer`, {
+    apiFetch<DriverTransfer>(`/api/v1/master-data/drivers/${driverId}/transfer`, {
       method: 'POST',
       body: data,
     }),

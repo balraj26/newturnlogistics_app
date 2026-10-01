@@ -165,6 +165,23 @@ export interface Driver {
   is_active: boolean;
 }
 
+export type DriverTransferStatus = 'pending' | 'accepted' | 'declined' | 'cancelled';
+
+/** A request to move a driver to another transporter — the driver only
+ * moves once the receiving transporter accepts. */
+export interface DriverTransfer {
+  id: UUID;
+  driver_id: UUID;
+  from_company_id: UUID;
+  to_company_id: UUID;
+  status: DriverTransferStatus;
+  created_at: string;
+  driver_full_name: string;
+  driver_license_number: string;
+  from_company_name: string;
+  to_company_name: string;
+}
+
 // ---- Shipment --------------------------------------------------------
 
 export type ShipmentStatus =
