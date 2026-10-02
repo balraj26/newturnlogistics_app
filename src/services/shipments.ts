@@ -5,6 +5,7 @@ import type {
   LoadingEventType,
   RejectionReason,
   Shipment,
+  ShipmentShare,
   ShipmentDetail,
   ShipmentTimelineEvent,
   UnloadingEvent,
@@ -70,7 +71,6 @@ export interface UnloadingReconcileInput {
 // Bare (no-body) POST actions. "cancel" is deliberately excluded — it now
 // requires a { cancellation_reason } body, see shipmentsService.cancel.
 export const LIFECYCLE_ACTIONS = [
-  'publish',
   'start-pickup',
   'mark-loaded',
   'dispatch',
@@ -151,6 +151,19 @@ export const shipmentsService = {
       body: { cancellation_reason: cancellationReason },
     }),
 
+  /** Opens bidding to the chosen linked transporters (spec §4.2). */
+  publish: (shipmentId: UUID, transporterCompanyIds: UUID[]) =>
+    apiFetch<Shipment>(`/api/v1/shipments/${shipmentId}/publish`, {
+      method: 'POST',
+      body: { transporter_company_ids: transporterCompanyIds },
+    }),
+  addShares: (shipmentId: UUID, transporterCompanyIds: UUID[]) =>
+    apiFetch<ShipmentShare[]>(`/api/v1/shipments/${shipmentId}/shares`, {
+      method: 'POST',
+      body: { transporter_company_ids: transporterCompanyIds },
+    }),
+  listShares: (shipmentId: UUID) =>
+    apiFetch<ShipmentShare[]>(`/api/v1/shipments/${shipmentId}/shares`),
   runAction: (shipmentId: UUID, action: LifecycleAction) =>
     apiFetch<Shipment>(`/api/v1/shipments/${shipmentId}/${action}`, { method: 'POST' }),
 

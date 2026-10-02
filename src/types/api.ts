@@ -490,6 +490,15 @@ export interface FactoryTransporterLink {
   factory_company_id: UUID;
   transporter_company_id: UUID;
   status: LinkStatus;
+  factory_company_name: string;
+  transporter_company_name: string;
+}
+
+/** A linked transporter a shipment was shared with (shipment spec §4.2). */
+export interface ShipmentShare {
+  transporter_company_id: UUID;
+  shared_by_user_id: UUID | null;
+  created_at: string;
 }
 
 export interface CompanyLookupResult {

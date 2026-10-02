@@ -6,6 +6,7 @@ import { Controller, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
+import { ShareTransportersCard } from '@/components/ShareTransportersCard';
 import { Button, Card, EmptyState, Input, LoadingView, StatusPill, Text, TopAppBar } from '@/components/ui';
 import { ApiError } from '@/lib/api-client';
 import { nextDriverAction, shipmentStatusMeta } from '@/lib/shipment-status';
@@ -64,11 +65,6 @@ export default function HomeShipmentDetailScreen() {
   const onError = (error: unknown) =>
     Alert.alert('Action failed', error instanceof ApiError ? error.message : 'Something went wrong');
 
-  const publish = useMutation({
-    mutationFn: () => shipmentsService.runAction(id, 'publish'),
-    onSuccess: invalidate,
-    onError,
-  });
   const acceptBid = useMutation({
     mutationFn: (bidId: string) => shipmentsService.acceptBid(id, bidId),
     onSuccess: () => {
@@ -146,14 +142,13 @@ export default function HomeShipmentDetailScreen() {
           )}
         </Card>
 
-        {isConsignor && shipment.status === 'draft' && (
-          <Button label={publish.isPending ? 'Publishing...' : 'Publish for bidding'} onPress={() => publish.mutate()} loading={publish.isPending} />
-        )}
+        {isConsignor && shipment.status === 'draft' && <ShareTransportersCard shipmentId={id} mode="publish" />}
+        {isConsignor && shipment.status === 'bidding_open' && <ShareTransportersCard shipmentId={id} mode="add" />}
 
         {isConsignor && shipment.status === 'bidding_open' && (
           <Card>
             <Text variant="title">Bids</Text>
-            {(bids ?? []).length === 0 && <EmptyState title="No bids yet" body="Linked transporters can bid once you've published this shipment." />}
+            {(bids ?? []).length === 0 && <EmptyState title="No bids yet" body="Transporters you shared this shipment with can bid on it." />}
             {(bids ?? []).map((bid) => (
               <View key={bid.id} style={styles.bidRow}>
                 <View style={styles.grow}>
